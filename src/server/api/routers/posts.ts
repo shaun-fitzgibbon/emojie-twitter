@@ -9,6 +9,9 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 
+import { Ratelimit } from "@upstash/ratelimit"; // for deno: see above
+import { Redis } from "@upstash/redis";
+
 const filterUserForClient = (user: User) => {
   return {
     id: user.id,
@@ -16,9 +19,6 @@ const filterUserForClient = (user: User) => {
     profileImageUrl: user.profileImageUrl,
   };
 };
-
-import { Ratelimit } from "@upstash/ratelimit"; // for deno: see above
-import { Redis } from "@upstash/redis";
 
 // Create a new ratelimiter, that allows 3 requests per 1 minute
 const ratelimit = new Ratelimit({
@@ -63,7 +63,11 @@ export const postsRouter = createTRPCRouter({
   create: privateProcedure
     .input(
       z.object({
-        content: z.string().emoji().min(1).max(280),
+        content: z
+          .string()
+          .emoji("Only emojis are allowed in posts")
+          .min(1)
+          .max(280),
       })
     )
     .mutation(async ({ ctx, input }) => {
