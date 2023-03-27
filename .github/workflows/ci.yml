@@ -1,0 +1,36 @@
+name: Node.js CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  DATABASE_URL: "https://fake.com"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "lts/*"
+
+      - name: Install dependencies
+        run: |
+          # npm install -g pnpm
+          pnpm install
+
+      - name: Typecheck with TypeScript
+        run: pnpm run typecheck
+
+      - name: Lint with ESLint
+        run: pnpm run lint
