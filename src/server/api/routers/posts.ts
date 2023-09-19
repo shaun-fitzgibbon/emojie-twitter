@@ -49,7 +49,7 @@ export const postsRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      const post = await ctx.prisma.post.findUnique({
+      const post = await ctx.db.post.findUnique({
         where: { id: input.id },
       });
 
@@ -62,7 +62,7 @@ export const postsRouter = createTRPCRouter({
     }),
 
   getAll: publicProcedure.query(async ({ ctx }) => {
-    const posts = await ctx.prisma.post.findMany({
+    const posts = await ctx.db.post.findMany({
       take: 100,
       orderBy: [{ createdAt: "desc" }],
     });
@@ -73,7 +73,7 @@ export const postsRouter = createTRPCRouter({
   getPostsByUserId: publicProcedure
     .input(z.object({ userId: z.string() }))
     .query(({ ctx, input }) =>
-      ctx.prisma.post
+      ctx.db.post
         .findMany({
           where: {
             authorId: input.userId,
@@ -81,7 +81,7 @@ export const postsRouter = createTRPCRouter({
           take: 100,
           orderBy: [{ createdAt: "desc" }],
         })
-        .then(addUserDataToPosts)
+        .then(addUserDataToPosts),
     ),
 
   create: privateProcedure
@@ -92,7 +92,7 @@ export const postsRouter = createTRPCRouter({
           .emoji("Only emojis are allowed in posts")
           .min(1)
           .max(280),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const authorId = ctx.userId;
@@ -101,7 +101,7 @@ export const postsRouter = createTRPCRouter({
 
       if (!success) throw new TRPCError({ code: "TOO_MANY_REQUESTS" });
 
-      const post = await ctx.prisma.post.create({
+      const post = await ctx.db.post.create({
         data: {
           authorId,
           content: input.content,
