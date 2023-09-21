@@ -5,6 +5,7 @@
   "scripts": {
     "build": "next build",
     "db:push": "dotenv drizzle-kit push:mysql",
+    "db:studio": "dotenv drizzle-kit studio --port 3001 --verbose",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
@@ -24,6 +25,7 @@
     "@upstash/redis": "^1.22.0",
     "dayjs": "^1.11.10",
     "drizzle-orm": "^0.28.6",
+    "drizzle-zod": "^0.5.1",
     "next": "^13.4.19",
     "react": "18.2.0",
     "react-dom": "18.2.0",
