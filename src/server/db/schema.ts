@@ -8,7 +8,6 @@ import {
   timestamp,
   uniqueIndex,
   varchar,
-  text,
 } from "drizzle-orm/mysql-core";
 
 /**
@@ -24,7 +23,7 @@ export const posts = mysqlTable(
   {
     id: serial("id").primaryKey(),
     content: varchar("content", { length: 255 }),
-    authorId: text("authorId").notNull(),
+    authorId: varchar("authorId", { length: 255 }).notNull(),
     createdAt: timestamp("created_at")
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
