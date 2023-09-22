@@ -9,7 +9,7 @@ import {
 import { Ratelimit } from "@upstash/ratelimit"; // for deno: see above
 import { Redis } from "@upstash/redis";
 import { filterUserForClient } from "~/server/helpers/filterUserForClient";
-import type { Post } from "@prisma/client";
+import { posts, type Post } from "~/server/db/schema/posts";
 
 const addUserDataToPosts = async (posts: Post[]) => {
   const users = (
@@ -21,8 +21,7 @@ const addUserDataToPosts = async (posts: Post[]) => {
 
   return posts.map((post) => {
     const author = users.find((user) => user.id === post.authorId);
-
-    if (!author || !author.username)
+    if (!author?.username)
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Author for post not found",
@@ -46,11 +45,21 @@ const ratelimit = new Ratelimit({
 });
 
 export const postsRouter = createTRPCRouter({
+  // getAll
+  getAll: publicProcedure.query(async ({ ctx }) => {
+    const posts = await ctx.db.query.posts.findMany({
+      orderBy: (posts, { desc }) => [desc(posts.createdAt)],
+    });
+
+    return addUserDataToPosts(posts);
+  }),
+
+  //g etById
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      const post = await ctx.db.post.findUnique({
-        where: { id: input.id },
+      const post = await ctx.db.query.posts.findFirst({
+        where: (posts, { eq }) => eq(posts.id, input.id),
       });
 
       if (!post)
@@ -61,29 +70,20 @@ export const postsRouter = createTRPCRouter({
       return (await addUserDataToPosts([post]))[0];
     }),
 
-  getAll: publicProcedure.query(async ({ ctx }) => {
-    const posts = await ctx.db.post.findMany({
-      take: 100,
-      orderBy: [{ createdAt: "desc" }],
-    });
-
-    return addUserDataToPosts(posts);
-  }),
-
-  getPostsByUserId: publicProcedure
+  // getByUserId
+  getByUserId: publicProcedure
     .input(z.object({ userId: z.string() }))
     .query(({ ctx, input }) =>
-      ctx.db.post
+      ctx.db.query.posts
         .findMany({
-          where: {
-            authorId: input.userId,
-          },
-          take: 100,
-          orderBy: [{ createdAt: "desc" }],
+          where: (posts, { eq }) => eq(posts.authorId, input.userId),
+          limit: 100,
+          orderBy: (posts, { desc }) => [desc(posts.createdAt)],
         })
         .then(addUserDataToPosts),
     ),
 
+  // create
   create: privateProcedure
     .input(
       z.object({
@@ -94,20 +94,11 @@ export const postsRouter = createTRPCRouter({
           .max(280),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      const authorId = ctx.userId;
-
+    .mutation(async ({ ctx: { userId: authorId, db }, input }) => {
       const { success } = await ratelimit.limit(authorId);
-
       if (!success) throw new TRPCError({ code: "TOO_MANY_REQUESTS" });
-
-      const post = await ctx.db.post.create({
-        data: {
-          authorId,
-          content: input.content,
-        },
-      });
-
-      return post;
+      return await db
+        .insert(posts)
+        .values({ authorId, content: input.content });
     }),
 });

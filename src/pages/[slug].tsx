@@ -8,7 +8,7 @@ import { PostView } from "~/components/PostView";
 import { generateSSGHelper } from "~/server/helpers/ssgHelper";
 
 const ProfileFeed = (props: { userId: string }) => {
-  const { data, isLoading } = api.posts.getPostsByUserId.useQuery({
+  const { data, isLoading } = api.posts.getByUserId.useQuery({
     userId: props.userId,
   });
 
@@ -42,7 +42,7 @@ const ProfilePage: NextPage<{ username: string }> = ({ username }) => {
       <PageLayout>
         <div className="relative h-36 border-slate-400 bg-slate-600">
           <Image
-            src={data.profileImageUrl}
+            src={data.imageUrl}
             alt={`${data.username ?? ""}'s profile picture`}
             width={128}
             height={128}

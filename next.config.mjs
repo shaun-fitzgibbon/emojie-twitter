@@ -9,7 +9,7 @@ await import("./src/env.mjs");
 const config = {
   reactStrictMode: true,
   images: {
-    domains: ["img.clerk.com"],
+    domains: ["img.clerk.com", "images.clerk.dev"],
   },
 
   /**

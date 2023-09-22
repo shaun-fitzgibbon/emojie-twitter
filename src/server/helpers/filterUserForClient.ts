@@ -1,9 +1,11 @@
-import type { User } from "@clerk/nextjs/dist/api";
+import { type User } from "@clerk/nextjs/dist/types/server";
 
-export const filterUserForClient = (user: User) => {
+export const filterUserForClient = (
+  user: User,
+): Pick<User, "id" | "username" | "imageUrl"> => {
   return {
     id: user.id,
     username: user.username,
-    profileImageUrl: user.profileImageUrl,
+    imageUrl: user.imageUrl,
   };
 };
