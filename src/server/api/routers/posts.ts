@@ -48,7 +48,7 @@ export const postsRouter = createTRPCRouter({
   // getAll
   getAll: publicProcedure.query(async ({ ctx }) => {
     const posts = await ctx.db.query.posts.findMany({
-      orderBy: (posts, { desc }) => [desc(posts.createdAt)],
+      orderBy: (post, { desc }) => [desc(post.createdAtUTC)],
     });
 
     return addUserDataToPosts(posts);
@@ -59,7 +59,7 @@ export const postsRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const post = await ctx.db.query.posts.findFirst({
-        where: (posts, { eq }) => eq(posts.id, input.id),
+        where: (post, { eq }) => eq(post.id, input.id),
       });
 
       if (!post)
@@ -76,9 +76,9 @@ export const postsRouter = createTRPCRouter({
     .query(({ ctx, input }) =>
       ctx.db.query.posts
         .findMany({
-          where: (posts, { eq }) => eq(posts.authorId, input.userId),
+          where: (post, { eq }) => eq(post.authorId, input.userId),
           limit: 100,
-          orderBy: (posts, { desc }) => [desc(posts.createdAt)],
+          orderBy: (post, { desc }) => [desc(post.createdAtUTC)],
         })
         .then(addUserDataToPosts),
     ),
