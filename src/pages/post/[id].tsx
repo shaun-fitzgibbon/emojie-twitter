@@ -8,7 +8,7 @@ import PageLayout from "~/components/Layout";
 import { api } from "~/utils/api";
 import { PostView } from "~/components/PostView";
 
-const SinglePostPage: NextPage<{ id: number }> = ({ id }) => {
+const SinglePostPage: NextPage<{ id: string }> = ({ id }) => {
   const { data } = api.posts.getById.useQuery({
     id,
   });
