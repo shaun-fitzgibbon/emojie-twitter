@@ -14,7 +14,7 @@ type ResponseData = {
 // Create a new ratelimiter, that allows 3 requests per 1 minute
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(2, "1 m"),
+  limiter: Ratelimit.slidingWindow(2, "10 m"),
   analytics: true,
 });
 
@@ -27,15 +27,20 @@ export default async function handler(
   if (!secret)
     return res.status(401).json({ status: 400, message: "No secret supplied" });
 
-  //Rate Limiter
-  const { success } = await ratelimit.limit(secret);
+  // Rate Limiter
+  // Use a constant string to limit all requests with a single ratelimit
+  // Or use a userID, apiKey or ip address for individual limits.
+  const identifier = "keep-alive";
+  const { success } = await ratelimit.limit(identifier);
   if (!success)
-    return res.status(401).json({ status: 429, message: "To Many Requests" });
+    return res.status(429).json({ status: 429, message: "To Many Requests" });
 
   if (secret === `Bearer ${env.CRON_SECRET}`) {
     await db.insert(keepAlive).values({ content: "Keeping db Alive" });
-    res.status(201).json({ status: 201, message: "Db Updated" });
+    return res.status(201).json({ status: 201, message: "Db Updated" });
   } else {
-    res.status(401).json({ status: 401, message: "Not authed Db not updated" });
+    return res
+      .status(401)
+      .json({ status: 401, message: "Not authed Db not updated" });
   }
 }
