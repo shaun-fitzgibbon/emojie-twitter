@@ -30,7 +30,7 @@ export default async function handler(
   //Rate Limiter
   const { success } = await ratelimit.limit(secret);
   if (!success)
-    return res.status(401).json({ status: 400, message: "No secret supplied" });
+    return res.status(401).json({ status: 429, message: "To Many Requests" });
 
   if (secret === `Bearer ${env.CRON_SECRET}`) {
     await db.insert(keepAlive).values({ content: "Keeping db Alive" });
