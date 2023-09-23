@@ -14,19 +14,11 @@ export default async function handler(
   res: NextApiResponse<ResponseData>,
 ) {
   const secret = req.headers?.authorization;
-  // if (!secret) return new Response("No secret provided", { });
   if (!secret)
     return res.status(401).json({ status: 400, message: "No secret supplied" });
 
-  console.log(secret);
-
   if (secret === `Bearer ${env.CRON_SECRET}`) {
-    const response = await db
-      .insert(keepAlive)
-      .values({ content: "Keeping db Alive" });
-
-    console.log(response);
-
+    await db.insert(keepAlive).values({ content: "Keeping db Alive" });
     res.status(201).json({ status: 201, message: "Db Updated" });
   } else {
     res.status(401).json({ status: 401, message: "Not authed Db not updated" });
