@@ -18,7 +18,9 @@ export default async function handler(
   if (!secret)
     return res.status(401).json({ status: 400, message: "No secret supplied" });
 
-  if (secret === env.CRON_SECRET) {
+  console.log(secret);
+
+  if (secret === `Bearer ${env.CRON_SECRET}`) {
     const response = await db
       .insert(keepAlive)
       .values({ content: "Keeping db Alive" });
